@@ -151,7 +151,7 @@ exports.testCmd = (rl,id) => {
             const quiz = model.getByIndex(id);
 
             rl.question(colorize('¿'+ quiz.question + '? ','red'),resp => {
-                if(resp.toLowerCase() === quiz.answer.toLowerCase()) {
+                if(resp.toLowerCase().trim() === quiz.answer.toLowerCase().trim()) {
                     biglog('Correcto','green');
                     rl.prompt();
                 } else {

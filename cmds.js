@@ -176,8 +176,9 @@ exports.testCmd = (rl,id) => {
 exports.playCmd = rl => {
     let score = 0;
     let toBeResolved = [];
+    let ordenArray = 0;
 
-    for(let i=0; i<quizzes.length; i++) {
+    for(let i=0; i < quizzes.length; i++) {
         toBeResolved[i]=quizzes[i];
         log(toBeResolved[i],'blue');
     }
@@ -185,20 +186,29 @@ exports.playCmd = rl => {
     const playOne = () => {
         if(toBeResolved.length === 0) {
             log('¡No hay preguntas que responder!','red');
+            log('Fin del examen. Aciertos: ');
+            biglog(score,'red');
             rl.prompt();
+
         } else {
-            
-            let id = Math.floor(Math.random() * (toBeResolved.length - 0)) + 0;;
-            let acertadas = 0;
-            let quiz = model.getByIndex(id);
+            //let quiz = toBeResolved.splice(Math.floor(Math.random() * (3)));
+
+            let id = Math.floor(Math.random() * toBeResolved.length);
+
+            let quiz = toBeResolved[id];
+            //log(quiz);
 
             rl.question(colorize('¿'+ quiz.question + '? ','red'),resp => {
                 if(resp.toLowerCase() === quiz.answer.toLowerCase()) {
                     score++;
-                    log('Llevas' + acertadas + 'preguntas acertadas','green');
+                    log('CORRECTO - Lleva ' + score + ' aciertos');
+                     toBeResolved.splice(id,1);
+                     //log(toBeResolved);
                     playOne();
                 } else {
-                    biglog('Incorrecto','red');
+                    log('INCORRECTO.');
+                    log('Fin del examen. Aciertos:')
+                    biglog(score,'red');
                     rl.prompt();
                 }
             });
@@ -209,7 +219,7 @@ exports.playCmd = rl => {
 
 };
 
-const arrayAleatorio = () => {
+/*const arrayAleatorio = () => {
     var cantidadNumeros = 5;
     var myArray = []
     while(myArray.length < cantidadNumeros ){
@@ -227,7 +237,7 @@ const arrayAleatorio = () => {
 
     }
     document.write("números aleatorios : " + myArray);
-};
+};*/
 
 /**
  *  Muestra el nombre del autor de la prática.

@@ -175,11 +175,11 @@ exports.testCmd = (rl,id) => {
  */
 exports.playCmd = rl => {
     let score = 0;
-
     let toBeResolved = [];
 
-    for(let i=0; i<5; i++) {
-        toBeResolved[i]=model.quizzes[i];
+    for(let i=0; i<quizzes.length; i++) {
+        toBeResolved[i]=quizzes[i];
+        log(toBeResolved[i],'blue');
     }
 
     const playOne = () => {
@@ -187,6 +187,7 @@ exports.playCmd = rl => {
             log('¡No hay preguntas que responder!','red');
             rl.prompt();
         } else {
+            
             let id = Math.floor(Math.random() * (toBeResolved.length - 0)) + 0;;
             let acertadas = 0;
             let quiz = model.getByIndex(id);
@@ -206,6 +207,26 @@ exports.playCmd = rl => {
 
     playOne();
 
+};
+
+const arrayAleatorio = () => {
+    var cantidadNumeros = 5;
+    var myArray = []
+    while(myArray.length < cantidadNumeros ){
+        var numeroAleatorio = Math.ceil(Math.random()*cantidadNumeros);
+        var existe = false;
+        for(var i=0;i<myArray.length;i++){
+            if(myArray [i] == numeroAleatorio){
+                existe = true;
+                break;
+            }
+        }
+        if(!existe){
+            myArray[myArray.length] = numeroAleatorio;
+        }
+
+    }
+    document.write("números aleatorios : " + myArray);
 };
 
 /**

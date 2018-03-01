@@ -10,14 +10,14 @@ const DB_FILENAME = "quizzes.json";
 // En esta variable se mantienen todos los quizzes existentes.
 // Es un array de objetos, donde cada objeto tiene los atributos question
 // y answer para guardar el texto de la pregunta y el de la respuesta.
-let quizzes = [
+exports.quizzes = [
     {
         question: "Capital de Italia",
         answer: "Roma"
     },
     {
         question: "Capital de Francia",
-        answer: "París"
+        answer: "Paris"
     },
     {
         question: "Capital de España",

@@ -152,10 +152,10 @@ exports.testCmd = (rl,id) => {
 
             rl.question(colorize('¿'+ quiz.question + '? ','red'),resp => {
                 if(resp.toLowerCase().trim() === quiz.answer.toLowerCase()) {
-                    biglog("Correcto",'green');
+                    log("Correcto",'green');
                     rl.prompt();
                 } else {
-                    biglog("Incorrecto",'red');
+                    log("Incorrecto",'red');
                     rl.prompt();
                 }
             });
@@ -202,8 +202,8 @@ exports.playCmd = rl => {
                 if(resp.toLowerCase() === quiz.answer.toLowerCase()) {
                     score++;
                     log('CORRECTO - Lleva ' + score + ' aciertos');
-                     toBeResolved.splice(id,1);
-                     //log(toBeResolved);
+                    toBeResolved.splice(id,1);
+                    //log(toBeResolved);
                     playOne();
                 } else {
                     log('INCORRECTO.');
@@ -234,7 +234,6 @@ exports.playCmd = rl => {
         if(!existe){
             myArray[myArray.length] = numeroAleatorio;
         }
-
     }
     document.write("números aleatorios : " + myArray);
 };*/

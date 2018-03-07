@@ -1,4 +1,4 @@
-const model = require('./model');
+const {models} = require('./model');
 const {log, biglog, errorlog, colorize} = require("./out");
 
 /**
@@ -28,12 +28,19 @@ exports.helpCmd = rl => {
  */
 exports.listCmd = rl => {
 
-    model.getAll().forEach((quiz,id) => {
+    models.quiz.findAll()
+        .then(quizzes => {
+            quizzes.forEach((quiz) => {
+                log(`   [${colorize(id,'magenta')}]: ${quiz.question}`);
+            });
+        })
+        .catch(error => {
+            errorlog(error.message);
+        })
+        .then(() => {
+            rl.prompt();
+        });
 
-        log(`   [${colorize(id,'magenta')}]: ${quiz.question}`);
-    });
-    //log('Listar los quizzes existentes.');
-    rl.prompt();
 };
 
 /**

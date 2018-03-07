@@ -26,13 +26,10 @@ exports.helpCmd = rl => {
  *
  *  @param rl Objeto readline usado para implementar el CLI
  */
-exports.listCmd = rl => {
-
+exports.listCmd = (rl) => {
     models.quiz.findAll()
-        .then(quizzes => {
-            quizzes.forEach((quiz) => {
-                log(`   [${colorize(id,'magenta')}]: ${quiz.question}`);
-            });
+        .each(quiz => {
+            log(`   [${colorize(id,'magenta')}]: ${quiz.question}`);
         })
         .catch(error => {
             errorlog(error.message);
@@ -43,6 +40,31 @@ exports.listCmd = rl => {
 
 };
 
+
+/**
+ * Esta funcion devuelve una promesa que:
+ *  - Valida que se ha introducido un valor para el parametro.
+ *  - Convierte el parametro en un numero entero.
+ * Si todo va bien, la promesa se satisface y devuelve el valor de id.
+ *
+ * @param id Parametro con el indice a validar
+ */
+const validateId = id => {
+    return new Promise((resolve, reject) => {
+        if (typeof id === "undefined") {
+            reject(new Error(`Falta el parametro <id>.`));
+        } else {
+            id = parseInt(id);
+            if (Number.isNaN(id)) {
+                reject(new Error(`El valor del parametro <id> no es un número.`));
+            } else {
+                resolve(id);
+            }
+        }
+    });
+};
+
+
 /**
  *  Muestra el quiz indicado en el parámetro: la pregunta y la respuesta.
  *
@@ -51,20 +73,41 @@ exports.listCmd = rl => {
  */
 exports.showCmd = (rl,id) => {
 
-    if(typeof id === "undefined") {
-        errorlog(`Falta el parametro id.`);
-    } else {
-        try {
-            const quiz = model.getByIndex(id);
-            log(`   [${colorize(id, 'magenta')}]:   ${quiz.question} ${colorize('=>','magenta')} ${quiz.answer}`);
-
-        } catch (error) {
+    validateId(id)
+        .then(id => models.quiz.findById(id))
+        .then(quiz => {
+            if (!quiz) {
+                throw new Error()(`No existe un quiz asociado al id=${id}.`);
+            }
+            log(`  [${colorize(quiz.id, 'magenta')}]: ${quiz.question} ${colorize('=>','red')} ${quiz.answer}`);
+        })
+        .catch(error => {
             errorlog(error.message);
-        }
-    }
+        })
+        .then(() => {
+            rl.prompt();
+        });
+};
 
-    //log('Mostrar el quiz indicado.');
-    rl.prompt();
+/**
+ * Esta funcion convierte la llamada rl.question, que esta basada en callbacks, en una
+ * basada en promesas.
+ *
+ * Esta funcion devuelve una promesa que cuando se cumple, proporciona el texto introducido.
+ * Entonces la llamada a then que hay que hacer la promesa devuelta sera:
+ *      .then(answer => {...})
+ *
+ * Tambien colorea en rojo el texto de la pregunta, elimina espacios al principio
+ *
+ * @param rl Objeto readline usado para implementar el CLI.
+ * @param text Pregunta que hay que hacerle al usuario.
+ */
+const makeQuestion = (rl,text) => {
+    return new Promise((resolve, reject) => {
+        rl.question(colorize(text,'red'), answer => {
+            resolve(answer.trim());
+        });
+    });
 };
 
 /**
@@ -74,14 +117,29 @@ exports.showCmd = (rl,id) => {
  *  @param rl Objeto readline usado para implementar el CLI
  */
 exports.addCmd = rl => {
-
-    rl.question(colorize(' Introduzca una pregunta: ', 'red'), question => {
-        rl.question(colorize(' Introduzca la respuesta: ','red'), answer => {
-            model.add(question,answer);
-            log(` ${colorize('Se ha añadido','magenta')}: ${question} ${colorize('=>','magenta')} ${answer}`);
+    makeQuestion(rl, 'Introduzca una pregunta: ')
+        .then(g => {
+            return makeQuestion(rl, 'Introduzca la respuesta ')
+                .then(a => {
+                    return {question: g, answer: a};
+                });
+        })
+        .then(quiz => {
+            return models.quiz.create(quiz);
+        })
+        .then((quiz) => {
+            log(` ${colorize('Se ha añadido','magenta')}: ${question} ${colorize('=>','red')} ${answer}`);
+        })
+        .catch(Sequelize.ValidationError, error => {
+            errorlog('El quiz es erroneo:');
+            error.errors.forEach(({message}) => errorlog(message));
+        })
+        .catch(error => {
+            errorlog(error.message);
+        })
+        .then(() => {
             rl.prompt();
-        });
-    });
+        })
 
     //log('Añadir un nuevo quiz.');
 };

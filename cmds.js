@@ -1,6 +1,8 @@
 const {models} = require('./model');
 const {log, biglog, errorlog, colorize} = require("./out");
 
+const Sequelize = require('sequelize');
+
 /**
  *  Muestra la ayuda.
  *
@@ -50,7 +52,7 @@ exports.listCmd = (rl) => {
  * @param id Parametro con el indice a validar
  */
 const validateId = id => {
-    return new Promise((resolve, reject) => {
+    return new Sequelize.Promise((resolve, reject) => {
         if (typeof id === "undefined") {
             reject(new Error(`Falta el parametro <id>.`));
         } else {
@@ -103,7 +105,7 @@ exports.showCmd = (rl,id) => {
  * @param text Pregunta que hay que hacerle al usuario.
  */
 const makeQuestion = (rl,text) => {
-    return new Promise((resolve, reject) => {
+    return new Sequelize.Promise((resolve, reject) => {
         rl.question(colorize(text,'red'), answer => {
             resolve(answer.trim());
         });
@@ -119,7 +121,7 @@ const makeQuestion = (rl,text) => {
 exports.addCmd = rl => {
     makeQuestion(rl, 'Introduzca una pregunta: ')
         .then(g => {
-            return makeQuestion(rl, 'Introduzca la respuesta ')
+            return makeQuestion(rl, 'Introduzca la respuesta: ')
                 .then(a => {
                     return {question: g, answer: a};
                 });
@@ -151,19 +153,14 @@ exports.addCmd = rl => {
  *  @param rl Objeto readline usado para implementar el CLI
  */
 exports.deleteCmd = (rl,id) => {
-
-    if(typeof id === "undefined") {
-        errorlog(`Falta el parametro id.`);
-    } else {
-        try {
-            model.deleteByIndex(id);
-        } catch (error) {
+    validateId(id)
+        .then(id => models.quiz.destroy({where: {id}}))
+        .catch(error => {
             errorlog(error.message);
-        }
-    }
-
-    //log('Borrar el quiz indicado.');
-    rl.prompt();
+        })
+        .then(() => {
+            rl.prompt();
+        })
 };
 
 /**
@@ -174,29 +171,41 @@ exports.deleteCmd = (rl,id) => {
  */
 exports.editCmd = (rl,id) => {
 
-    if(typeof id === "undefined") {
-        errorlog(`Falta el parametro id.`);
-        rl.prompt();
-    } else {
-        try {
-            const quiz = model.getByIndex(id);
-            process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)},0);
-            rl.question(colorize(' Introduzca una pregunta: ', 'red'), question => {
-                process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)},0);
-                rl.question(colorize(' Introduzca la respuesta: ','red'), answer => {
-                    model.update(id,question,answer);
-                    log(` Se ha cambiado el quiz ${colorize(id,'magenta')} por: ${question} ${colorize('=>','magenta')} ${answer}`);
-                    rl.prompt();
-                });
-            });
-        } catch (error) {
-            errorlog(error.message);
-            rl.prompt();
-        }
-    }
+   validateId(id)
+       .then(id => models.quiz.findById())
+       .then(quiz => {
+           if (!quiz) {
+               throw new Error(`No existe un quiz asociado al id=${id}.`);
+           }
 
-    //log('Editar el quiz indicado.');
-    rl.prompt();
+           process.stdout.isTTY && setTimeout(() => {rl.write(quiz.question)}, 0);
+           return makeQuestion(rl, 'Introduzca una pregunta')
+               .then( q => {
+                   process.stdout.isTTY && setTimeout(() => {rl.write(quiz.answer)}, 0);
+                   return makeQuestion(rl, 'Introduzca la respuesta')
+                       .then( a => {
+                           quiz.question = q;
+                           quiz.answer = a;
+                           return quiz;
+                       });
+               });
+       })
+       .then(quiz => {
+           return quiz.save();
+       })
+       .then(quiz => {
+           log(`Se ha cambiado el quiz ${colorize(quiz.id,'magenta')} por: ${quiz.question} ${colorize('=>','red')} ${quiz.answer}`);
+       })
+       .catch(Sequelize.ValidationError, error => {
+           errorlog('El quiz es erroneo');
+           error.errors.forEach(({message}) => errorlog(message));
+       })
+       .catch(error => {
+           errorlog(error.message);
+       })
+       .then(() => {
+           rl.prompt();
+       })
 };
 
 /**
@@ -207,7 +216,7 @@ exports.editCmd = (rl,id) => {
  *  @param rl Objeto readline usado para implementar el CLI
  */
 exports.testCmd = (rl,id) => {
-
+/*
     if(typeof id === "undefined") {
         errorlog(`Falta el parametro id.`);
         rl.prompt();
@@ -230,6 +239,7 @@ exports.testCmd = (rl,id) => {
             rl.prompt();
         }
     };
+    */
 };
 
 /**
@@ -239,7 +249,7 @@ exports.testCmd = (rl,id) => {
  *  @param rl Objeto readline usado para implementar el CLI
  */
 exports.playCmd = rl => {
-    let score = 0;
+   /* let score = 0;
     let toBeResolved = [];
     let ordenArray = 0;
 
@@ -281,7 +291,7 @@ exports.playCmd = rl => {
     };
 
     playOne();
-
+*/
 };
 
 /*const arrayAleatorio = () => {

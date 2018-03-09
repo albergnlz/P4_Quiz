@@ -154,7 +154,12 @@ exports.addCmd = rl => {
  */
 exports.deleteCmd = (rl,id) => {
     validateId(id)
-        .then(id => models.quiz.destroy({where: {id}}))
+        .then(id => {
+            models.quiz.destroy({where: {id}})
+        })
+        .then(quiz => {
+            log(` ${colorize('Se ha eliminado ','magenta')}: ${quiz.question} ${colorize('=>','red')} ${quiz.answer}`);
+        })
         .catch(error => {
             errorlog(error.message);
         })
@@ -216,31 +221,58 @@ exports.editCmd = (rl,id) => {
  *  @param rl Objeto readline usado para implementar el CLI
  */
 exports.testCmd = (rl,id) => {
-/*
-    if(typeof id === "undefined") {
-        errorlog(`Falta el parametro id.`);
-        rl.prompt();
-    } else {
-        try {
-            const quiz = model.getByIndex(id);
 
-            rl.question(colorize('¿'+ quiz.question + '? ','red'),resp => {
-                if(resp.toLowerCase().trim() === quiz.answer.toLowerCase()) {
-                    log("Correcto",'green');
-                    rl.prompt();
-                } else {
-                    log("Incorrecto",'red');
-                    rl.prompt();
-                }
-            });
+    validateId(id)
+        .then(id => models.quiz.findById(id))
+        .then(quiz => {
+            if (!quiz) {
+                throw new Error(`No existe un quiz asociado al id=${id}.`);
+            }
+            return makeQuestion(rl, colorize('¿' + quiz.question + '? ', 'red'))
+                .then(a => {
+                    //quiz.answer = a;
+                    log("La respuesta introducida es " + a);
 
-        } catch (error) {
+                    if (quiz.answer.toLowerCase() === a.toLowerCase()) {
+                        biglog("CORRECTO","green");
+                    } else {
+                        biglog("INCORRECTO","red");
+                    }
+                    return quiz;
+                });
+        })
+        .catch(error => {
             errorlog(error.message);
+        })
+        .then(() => {
             rl.prompt();
-        }
-    };
-    */
+        })
 };
+
+    /* if(typeof id === "undefined") {
+         errorlog(`Falta el parametro id.`);
+         rl.prompt();
+     } else {
+         try {
+             const quiz = model.getByIndex(id);
+
+             rl.question(colorize('¿'+ quiz.question + '? ','red'),resp => {
+                 if(resp.toLowerCase().trim() === quiz.answer.toLowerCase()) {
+                     log("Correcto",'green');
+                     rl.prompt();
+                 } else {
+                     log("Incorrecto",'red');
+                     rl.prompt();
+                 }
+             });
+
+         } catch (error) {
+             errorlog(error.message);
+             rl.prompt();
+         }
+     };
+     */
+
 
 /**
  *  Pregunta todos los quizzes existentes en el modelo en orden aleatorio.

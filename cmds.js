@@ -234,9 +234,9 @@ exports.testCmd = (rl,id) => {
                     log("La respuesta introducida es " + a);
 
                     if (quiz.answer.toLowerCase() === a.toLowerCase()) {
-                        biglog("CORRECTO","green");
+                        biglog("Correcto","green");
                     } else {
-                        biglog("INCORRECTO","red");
+                        biglog("Incorrecto","red");
                     }
                     return quiz;
                 });

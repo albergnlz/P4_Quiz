@@ -231,12 +231,14 @@ exports.testCmd = (rl,id) => {
             return makeQuestion(rl, colorize('¿' + quiz.question + '? ', 'red'))
                 .then(a => {
                     //quiz.answer = a;
-                    log("La respuesta introducida es " + a);
+                    //log("La respuesta introducida es " + a);
 
                     if (quiz.answer.toLowerCase() === a.toLowerCase()) {
                         log("Correcto","green");
+                        //biglog("Correcto","green");
                     } else {
                         log("Incorrecto","red");
+                        //biglog("Incorrecto","red");
                     }
                     return quiz;
                 });
@@ -249,30 +251,6 @@ exports.testCmd = (rl,id) => {
         })
 };
 
-    /* if(typeof id === "undefined") {
-         errorlog(`Falta el parametro id.`);
-         rl.prompt();
-     } else {
-         try {
-             const quiz = model.getByIndex(id);
-
-             rl.question(colorize('¿'+ quiz.question + '? ','red'),resp => {
-                 if(resp.toLowerCase().trim() === quiz.answer.toLowerCase()) {
-                     log("Correcto",'green');
-                     rl.prompt();
-                 } else {
-                     log("Incorrecto",'red');
-                     rl.prompt();
-                 }
-             });
-
-         } catch (error) {
-             errorlog(error.message);
-             rl.prompt();
-         }
-     };
-     */
-
 
 /**
  *  Pregunta todos los quizzes existentes en el modelo en orden aleatorio.
@@ -281,6 +259,62 @@ exports.testCmd = (rl,id) => {
  *  @param rl Objeto readline usado para implementar el CLI
  */
 exports.playCmd = rl => {
+    let toBeResolved = [];
+    //let id = Math.floor(Math.random() * 5);
+    let score = 0;
+    models.quiz.findAll({
+        raw:true,
+    })
+        .then(quizzes => {
+            toBeResolved = quizzes;
+        })
+
+
+    const play = () => {
+        return Promise.resolve()
+            .then(() => {
+                if(toBeResolved.length <= 0) {
+                    log('No hay mas preguntas');
+                    log('Fin del juego. Aciertos: ' + score);
+                    biglog(score,'magenta');
+                    rl.prompt();
+                }
+
+                let posicion = Math.floor(Math.random()*toBeResolved.length);
+                let quiz = toBeResolved[posicion];
+                toBeResolved.splice(posicion,1);
+                return makeQuestion(rl, quiz.question + ': ')
+                    .then(respuesta => {
+                        if(respuesta.trim().toLowerCase() === quiz.answer.trim().toLowerCase()) {
+                            score++;
+                            log('CORRECTO - LLeva ' + score + ' aciertos.');
+                            play();
+                        } else {
+                            log('INCORRECTO.');
+                            log('Fin del juego. Aciertos: ' + score);
+                            biglog(score,'magenta');
+                            rl.prompt();
+                        }
+                    })
+            })
+    }
+    models.quiz.findAll({
+        raw:true,
+    })
+        .then(quizzes => {
+            toBeResolved = quizzes;
+        })
+        .then(() => {
+            return play();
+        })
+        .catch(Sequelize.ValidationError, error => {
+            errorlog('El quiz es erroneo');
+            error.errors.forEach(({message}) => errorlog(message));
+        })
+        .then(() => {
+            rl.prompt();
+        })
+
    /* let score = 0;
     let toBeResolved = [];
     let ordenArray = 0;
@@ -321,29 +355,12 @@ exports.playCmd = rl => {
             });
         }
     };
-
     playOne();
 */
+   //log("  --- Metodo sin implementar ---",'blue')
+
 };
 
-/*const arrayAleatorio = () => {
-    var cantidadNumeros = 5;
-    var myArray = []
-    while(myArray.length < cantidadNumeros ){
-        var numeroAleatorio = Math.ceil(Math.random()*cantidadNumeros);
-        var existe = false;
-        for(var i=0;i<myArray.length;i++){
-            if(myArray [i] == numeroAleatorio){
-                existe = true;
-                break;
-            }
-        }
-        if(!existe){
-            myArray[myArray.length] = numeroAleatorio;
-        }
-    }
-    document.write("números aleatorios : " + myArray);
-};*/
 
 /**
  *  Muestra el nombre del autor de la prática.

@@ -3,96 +3,108 @@ const readline = require('readline');
 
 const {log, biglog, errorlog, colorize} = require("./out");
 
-const model = require('./model');
+const {models} = require('./model');
 const cmds = require("./cmds");
+const net = require("net");
 
+net.createServer(socket => {
+    console.log("Se ha conectado un cliente desde: " + socket.remoteAddress);
+    // Mensaje inicial
+        biglog(socket,'CORE Quiz','green');
 
-// Mensaje inicial
-biglog('CORE Quiz','green');
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: colorize("quiz > ", 'blue'),
-    completer: (line) => {
+    const rl = readline.createInterface({
+        input: socket,
+        output: socket,
+        prompt: colorize("quiz > ", 'blue'),
+        completer: (line) => {
         const completions = 'h help add delete edit list test p play credits quit q'.split(' ');
-        const hits = completions.filter((c) => c.startsWith(line));
-        // show all completions if none found
-        return [hits.length ? hits : completions, line];
+    const hits = completions.filter((c) => c.startsWith(line));
+    // show all completions if none found
+    return [hits.length ? hits : completions, line];
     }
-});
-rl.prompt();
+    });
 
-rl.
-on('line', (line) => {
+    socket
+    .on("end" , () => { rl.close()})
+    .on("error" , () => { rl.close()});
 
-  var args = line.split(" ");
-  var cmd = args[0].toLowerCase().trim();
 
-  switch (cmd) {
-      case '':
-          rl.prompt();
-          break;
+    rl.prompt();
 
-    case 'h':
-    case 'help':
-          cmds.helpCmd(rl);
-          break;
+    rl.
+    on('line', (line) => {
 
-    case 'quit':
-    case 'q':
-        cmds.quitCmd(rl);
-        break;
+        var args = line.split(" ");
+    var cmd = args[0].toLowerCase().trim();
 
-    case 'add':
-        cmds.addCmd(rl);
-        break;
+    switch (cmd) {
+        case '':
+            rl.prompt();
+            break;
 
-    case 'list':
-        cmds.listCmd(rl);
-        break;
+        case 'h':
+        case 'help':
+            cmds.helpCmd(socket,rl);
+            break;
 
-    case 'show':
-        cmds.showCmd(rl,args[1]);
-        break;
+        case 'quit':
+        case 'q':
+            cmds.quitCmd(socket,rl);
+            break;
 
-    case 'test':
-        cmds.testCmd(rl,args[1]);
-        break;
+        case 'add':
+            cmds.addCmd(socket,rl);
+            break;
 
-    case 'p':
-    case 'play':
-        cmds.playCmd(rl);
-        break;
+        case 'list':
+            cmds.listCmd(socket,rl);
+            break;
 
-    case 'delete':
-        cmds.deleteCmd(rl,args[1]);
-        break;
+        case 'show':
+            cmds.showCmd(socket,rl,args[1]);
+            break;
 
-    case 'edit':
-        cmds.editCmd(rl,args[1]);
-        break;
+        case 'test':
+            cmds.testCmd(socket,rl,args[1]);
+            break;
 
-    case 'test':
-        cmds.testCmd(rl);
-        break;
+        case 'p':
+        case 'play':
+            cmds.playCmd(socket,rl);
+            break;
 
-    case 'credits':
-        cmds.creditsCmd(rl);
-        break;
+        case 'delete':
+            cmds.deleteCmd(socket,rl,args[1]);
+            break;
 
-    default:
-      console.log(`Comando desconocido: '${colorize(cmd,'red')}'`);
-      console.log(`Use ${colorize('help','green')} help para ver todos los comando disponibles.`);
-      rl.prompt();
-      break;
-  }
-  
+        case 'edit':
+            cmds.editCmd(socket,rl,args[1]);
+            break;
 
-}).on('close', () => {
-  log('Adios!');
-  process.exit(0);
-});
+        case 'test':
+            cmds.testCmd(socket,rl);
+            break;
+
+        case 'credits':
+            cmds.creditsCmd(socket,rl);
+            break;
+
+        default:
+            log(socket,`Comando desconocido: '${colorize(cmd,'red')}'`);
+            log(socket, `Use ${colorize('help','green')} help para ver todos los comando disponibles.`);
+            rl.prompt();
+            break;
+    }
+
+
+    }).on('close', () => {
+        log(socket, 'Adios!');
+        //process.exit(0);
+    });
+
+})
+.listen(3030);
+
 
 
 

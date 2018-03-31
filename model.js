@@ -22,7 +22,7 @@ sequelize.sync()
             { question:"Capital de Italia",  answer:"Roma"},
             { question:"Capital de Francia",  answer:"Paris"},
             { question:"Capital de España",  answer:"Madrid"},
-            { question:"Capital de Portugal",  answer:"Liboa"}
+            { question:"Capital de Portugal",  answer:"Lisboa"}
         ]);
     }
 })
